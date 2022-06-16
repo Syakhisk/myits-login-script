@@ -1,0 +1,2 @@
+GET https://my.its.ac.id
+cookie: TVMSESSID=ripb688n0mq77g5fnbtis7krpcitkehkn2ujjvfcvadeik62v2q09d99t2tcjgfp;
