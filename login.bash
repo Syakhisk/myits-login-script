@@ -15,12 +15,14 @@ echo ""
 # exit 0
 
 if [ ! -f "${SCRIPTPATH}/cookie.txt" ]; then
-  curl -c $SCRIPTPATH/cookie.txt -Ls -o /dev/null -w "" https://id.its.ac.id/internetaccess/auth.php
+  # curl -c $SCRIPTPATH/cookie.txt -Ls -o /dev/null -w "" https://id.its.ac.id/internetaccess/auth.php
+  curl -c $SCRIPTPATH/cookie.txt -Ls -o /dev/null -w "" https://myits-app.its.ac.id/internet/auth.php
 fi
 
 sleep 1
 
-RESPONSE=$(curl -c $SCRIPTPATH/cookie.txt -b $SCRIPTPATH/cookie.txt -Ls -o /dev/null -w %{url_effective} https://id.its.ac.id/internetaccess/auth.php)
+# RESPONSE=$(curl -c $SCRIPTPATH/cookie.txt -b $SCRIPTPATH/cookie.txt -Ls -o /dev/null -w %{url_effective} https://id.its.ac.id/internetaccess/auth.php)
+RESPONSE=$(curl -c $SCRIPTPATH/cookie.txt -b $SCRIPTPATH/cookie.txt -Ls -o /dev/null -w %{url_effective} https://myits-app.its.ac.id/internet/auth.php)
 
 CLIENT_ID=$(echo $RESPONSE | sed -n 's/.*client_id=\([^&]*\).*/\1/p')
 SCOPE=$(echo $RESPONSE | sed -n 's/.*scope=\([^&]*\).*/\1/p' | sed 's/+/%2B/g')

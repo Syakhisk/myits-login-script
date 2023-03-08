@@ -1,7 +1,6 @@
 #!/bin/env python3
 
 import json
-import os
 import requests as r
 from urllib.parse import parse_qs, parse_qsl, urlparse
 import subprocess as sp
@@ -37,21 +36,9 @@ def encrypt(data):
 
     return out["stdout"]
 
-# if [ ! -f "${SCRIPTPATH}/cookie.txt" ]; then
-#   curl -c $SCRIPTPATH/cookie.txt -Ls -o /dev/null -w "" https://id.its.ac.id/internetaccess/auth.php
-# fi
-
 
 def main():
     s = r.Session()
-
-    if(os.path.isfile("dict-cookie.json")):
-        log("Found dict-cookie.json, requesting internet access...", "auth")
-        res = s.get("https://myits-app.its.ac.id/internet/auth.php")
-        for h in res.history:
-            log(h.url, "redirect")
-        return
-
     res = s.get("https://my.its.ac.id", verify=False)
 
     for h in res.history:
@@ -107,7 +94,7 @@ def main():
     if "myITS ID atau kata sandi anda salah!" in res.content.decode():
         return log("Incorrect credentials", "ERROR")
 
-    # TODO: Check external internet access
+    # TODO: Check external internet acces
     # res = r.get("https://google.com")
     # if "Selamat datang di kampus ITS" in res.content.decode():
     #     return print("Failed geming")
@@ -122,17 +109,10 @@ def main():
 
     print("")
     log("Copy TVMSESSID cookie value to use the session.")
-
-    log("Writing to ./curl-cookie.txt")
-    f = open("./curl-cookie.txt", "w")
+    log("Writing to ./cookie.txt")
+    f = open("./cookie.txt", "w")
     f.write(f"TVMSESSID={cookies['TVMSESSID']}")
-
-    log("Writing to ./dict-cookie.json")
-    f = open("./dict-cookie.json", "w")
-    f.write(f'{{"TVMSESSID": {cookies["TVMSESSID"]}}}')
-
     log("Cookie written")
-    log("re-run this to request internet access", "auth")
 
 
 if __name__ == "__main__":

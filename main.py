@@ -1,13 +1,109 @@
 #!/bin/env python3
 
 import json
-import requests as r
-from urllib.parse import parse_qs, parse_qsl, urlparse
+import requests
+from urllib.parse import quote, parse_qsl, urlparse
 import subprocess as sp
 
 import config
 
-r.packages.urllib3.disable_warnings()
+requests.packages.urllib3.disable_warnings()
+
+
+def main():
+    # Setup a session
+    s = requests.Session()
+
+    # Some random "ongko" value, idk what is this but required at the page js script
+    random_cookie = quote(
+        '{"ongko": "12850820230308011013$bc5dd754ba343195cd29c8025a4a6bc7"}')
+    s.cookies.set("_idx", random_cookie)
+
+    # Get initial cookies
+    print("--Getting initial cookies--")
+    res = s.get("https://myits-app.its.ac.id/internet/auth.php", verify=False)
+
+    error_internal_network = "Akses internet hanya diperbolehkan dari alamat IP internal ITS 10.X.X.X"
+    if error_internal_network in res.content.decode():
+        log("You're not connected to internal network or make sure VPN is active", "ERROR")
+        return
+
+    # Print redirects
+    for h in res.history:
+        log(h.url, "redirect")
+
+    # Parse query from my its
+    # my.its.ac.id/authorize?response_type=....
+    raw_queries = urlparse(res.url).query
+    queries = parse_qsl(raw_queries)
+    print("--Query--")
+    print(queries)
+
+    # Possible query params keys
+    post_data_keys = [
+        "client_id",
+        "response_type",
+        "scope",
+        "state",
+        "prompt",
+        "redirect_uri",
+        "nonce",
+        "content",
+        "password_state",
+        "device_method",
+    ]
+
+    # Build post data to be sent
+    post_data = {}
+
+    # Build "content" post data from encryption
+    raw_content = json.dumps(
+        {"u": config.username, "p": config.decode_pw(), "dm": "", "ps": "true"},
+        separators=(",", ":"),
+    )
+    post_data["password_state"] = "true"
+    post_data["content"] = encrypt(raw_content)
+
+    # Append query params to post data
+    for key in post_data_keys:
+        query = list(filter(lambda tup: tup[0] == key, queries))
+        if len(query) > 0:
+            query = query.pop()
+            post_data[key] = query[1]
+
+    print("--Post Data--")
+    print(post_data)
+
+    # Login
+    res = s.post("https://my.its.ac.id/signin", data=post_data, verify=False)
+
+    for h in res.history:
+        log(h.url, "redirect")
+
+    if "redirect_uri_mismatch" in res.content.decode():
+        return log("Failed, Try Again", "ERROR")
+    if "myITS ID or password is incorrect!" in res.content.decode():
+        return log("Incorrect credentials", "ERROR")
+    if "myITS ID atau kata sandi anda salah!" in res.content.decode():
+        return log("Incorrect credentials", "ERROR")
+
+    # TODO: Check external internet access
+    # res = r.get("https://google.com")
+    # if "Selamat datang di kampus ITS" in res.content.decode():
+    #     return print("Failed geming")
+
+    print("--Login successful--")
+
+    cookies = s.cookies.get_dict()
+    print("--Cookies--")
+    print(cookies)
+
+    print("--Requesting internet access--")
+    res = s.get("https://myits-app.its.ac.id/internet/auth.php", verify=False)
+
+    # Print redirects
+    for h in res.history:
+        log(h.url, "redirect")
 
 
 def log(msg, type="Log"):
@@ -29,90 +125,9 @@ def encrypt(data):
         f"echo -n '{data}' | openssl rsautl -encrypt -pubin -inkey {pubkey_path} | base64 -w 0"
     )
 
-    # if out["stderr"]:
-    #     raise Exception(out['stderr'])
-
-    print(f"WARN/ERR ON ENCRYPT FUNCTION: {out['stderr']}")
+    print(f"WARN/ERR ON ENCRYPT FUNCTION: {out['stderr']}\n")
 
     return out["stdout"]
-
-
-def main():
-    s = r.Session()
-    res = s.get("https://my.its.ac.id", verify=False)
-
-    for h in res.history:
-        log(h.url, "redirect")
-
-    raw_query = urlparse(res.url).query
-    query = parse_qsl(raw_query)
-
-    log(query, "query")
-
-    post_data_keys = [
-        "client_id",
-        "response_type",
-        "scope",
-        "state",
-        "prompt",
-        "redirect_uri",
-        "nonce",
-        "content",
-        "password_state",
-        "device_method",
-    ]
-
-    post_data = {}
-    for pd_key in post_data_keys:
-        v = [q[1] for q in query if q[0] == pd_key]
-        post_data[pd_key] = v[0] if len(v) else ""
-
-    raw_content = json.dumps(
-        {"u": config.username, "p": config.decode_pw(), "dm": "", "ps": "true"},
-        separators=(",", ":"),
-    )
-
-    content = encrypt(raw_content)
-    log(content, "content")
-
-    post_data["password_state"] = "true"
-    post_data["content"] = content
-
-    log(post_data, "post-body")
-
-    res = s.post("https://my.its.ac.id/signin", data=post_data, verify=False)
-
-    for h in res.history:
-        log(h.url, "redirect")
-
-    log(res.url, "url")
-
-    if "redirect_uri_mismatch" in res.content.decode():
-        return log("Failed, Try Again", "ERROR")
-    if "myITS ID or password is incorrect!" in res.content.decode():
-        return log("Incorrect credentials", "ERROR")
-    if "myITS ID atau kata sandi anda salah!" in res.content.decode():
-        return log("Incorrect credentials", "ERROR")
-
-    # TODO: Check external internet acces
-    # res = r.get("https://google.com")
-    # if "Selamat datang di kampus ITS" in res.content.decode():
-    #     return print("Failed geming")
-
-    print("Success")
-
-    print("--Data--")
-    cookies = s.cookies.get_dict()
-
-    for key in cookies:
-        print(f"{key}:{cookies[key]}")
-
-    print("")
-    log("Copy TVMSESSID cookie value to use the session.")
-    log("Writing to ./cookie.txt")
-    f = open("./cookie.txt", "w")
-    f.write(f"TVMSESSID={cookies['TVMSESSID']}")
-    log("Cookie written")
 
 
 if __name__ == "__main__":
