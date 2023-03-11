@@ -4,10 +4,15 @@ import os
 import requests
 import subprocess
 
-res = requests.get("https://google.com")
+requests.packages.urllib3.disable_warnings()
+
+res = requests.get("https://google.com", verify=False)
 last_url = res.history[-1].url
 
-if "https://google.com" not in last_url:
+for h in res.history:
+    print(h.url)
+
+if "https://google.com" in last_url:
     print("Has Internet Access!")
     exit(0)
 
