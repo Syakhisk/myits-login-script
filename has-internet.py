@@ -10,7 +10,7 @@ requests.packages.urllib3.disable_warnings()
 res = requests.get("https://google.com", verify=False)
 last_url = res.history[-1].url
 
-if "https://google.com" in last_url:
+if "https://myits-app.its.ac.id/internet" not in last_url:
     exit(0)
 
 print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}]")
