@@ -7,5 +7,6 @@ IP="$(hostname --ip-address)"
 curl -v \
 	-X POST \
 	-H "Authorization: Bearer $TOKEN" \
-	-F "message=PROXMOX UPTIME-- IP: $IP -- Date: $(date) -- Uptime: $(uptime -p)" \
+	-F "message=PROXMOX UPDATE -- IP: $IP -- Date: $(date) -- Uptime: $(uptime -p)" \
+	-F "notificationDisabled=true" \
 	https://notify-api.line.me/api/notify
