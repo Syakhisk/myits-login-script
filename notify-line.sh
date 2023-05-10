@@ -1,11 +1,14 @@
 #!/bin/env bash
 
-TOKEN="----------"
+TOKEN="1zajgP8VFg9Aus6TKyGKx51vzztPQXuS8x24dN2lG0D"
 IP="$(hostname --ip-address)"
 LAST_IP="$([[ -f /tmp/last_ip ]] && cat /tmp/last_ip || echo)"
 
+echo "LAST_IP=$LAST_IP"
+
 if [[ "$LAST_IP" != "$IP" ]]; then
-        python3 /root/myits-login-script/main.py
+	cd /root/myits-login-script
+        python3 main.py
 
         # notification
         curl -v \
