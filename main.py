@@ -4,6 +4,7 @@ import json
 import requests
 from urllib.parse import quote, parse_qsl, urlparse
 import subprocess as sp
+from base64 import b64decode
 
 import config
 
@@ -128,6 +129,10 @@ def encrypt(data):
     print(f"WARN/ERR ON ENCRYPT FUNCTION: {out['stderr']}\n")
 
     return out["stdout"]
+
+
+def decode_pw(str):
+    return b64decode(str.encode() + b"==").decode().strip()
 
 
 if __name__ == "__main__":
