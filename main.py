@@ -145,20 +145,27 @@ def encode_pw(str):
 
 
 def get_credentials():
-    if not path.exists(secret_path):
+    username = None
+    password = None
+
+    if path.exists(secret_path):
+        f = open(secret_path, "rb")
+        username = (f.readline().strip()).decode()
+        password = decode_pw(f.readline().strip())
+        f.close()
+    else:
         inputUsername = input("Username (NRP): ")
         inputPassword = getpass("Password: ")
 
-        if input() == "y":
+        username = inputUsername
+        password = inputPassword
+
+        if input("Save password to secret.txt for automation? [y/n]") == "y":
             f = open("secret.txt", "w")
-            f.write(inputUsername + "\n")
-            f.write(encode_pw(inputPassword))
+            f.write(username + "\n")
+            f.write(encode_pw(password))
             f.close()
 
-    f = open(secret_path, "rb")
-    username = (f.readline().strip()).decode()
-    password = decode_pw(f.readline().strip())
-    f.close()
     return username, password
 
 
