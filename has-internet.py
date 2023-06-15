@@ -23,5 +23,3 @@ for h in res.history:
 
 login_script = f"cd {script_path} && ./main.py"
 p = subprocess.Popen(login_script, stdout=subprocess.PIPE, shell=True)
-# stdout,_ = p.communicate()
-# print(stdout.decode())

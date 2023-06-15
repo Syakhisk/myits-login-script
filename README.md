@@ -7,15 +7,35 @@ This script can be used for:
 
 ## Usage
 
-1. Copy `config.sample.py` to `config.py`
-2. Run `config.py` and enter the output to password in `config.py`
-3. Run `main.py`
+```
+$ python3 main.py
+```
 
-## TODO
+or
 
-- [ ] Make script more portable, create one copy-paste-able file
-- [ ] Make `config.py` optional
+```
+$ ./main.py
+```
+
+## Files
+
+### `main.py`
+The login script.
+
+### ❗ `secret.txt` ❗
+a file containing your myITS username and password, separated by a newline. DO NOT store your password if you don't need to use this script in an **automation**.
+
+
+### `has-internet.py`
+
+Will try to access `https://google.com` to check the computer has internet access, if it doesn't it will run the `main.py` script.
+
+
+### TODO
+
+- [ ] Add a more secure way to store the password
+
 
 ## Credit
 
-- Credit to Suhu [dslite](https://github.com/dslite) for creating the source bash script.
+- [dslite](https://github.com/dslite) for creating a bash script to breakdown the authentication flow.

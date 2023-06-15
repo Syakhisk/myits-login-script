@@ -2,16 +2,22 @@
 
 import json
 import requests
-from urllib.parse import quote, parse_qsl, urlparse
 import subprocess as sp
-from base64 import b64decode
-
-import config
+from urllib.parse import quote, parse_qsl, urlparse
+from base64 import b64decode, b64encode
+from getpass import getpass
+from os import path
 
 requests.packages.urllib3.disable_warnings()
 
+script_dir = path.dirname(path.realpath(__file__))
+secret_path = path.join(script_dir, "secret.txt")
+pubkey_path = path.join(script_dir, "pubkey.pem")
+
 
 def main():
+    username, password = get_credentials()
+
     # Setup a session
     s = requests.Session()
 
@@ -59,7 +65,7 @@ def main():
 
     # Build "content" post data from encryption
     raw_content = json.dumps(
-        {"u": config.username, "p": config.decode_pw(), "dm": "", "ps": "true"},
+        {"u": username, "p": password, "dm": "", "ps": "true"},
         separators=(",", ":"),
     )
     post_data["password_state"] = "true"
@@ -121,7 +127,6 @@ def run(command):
 
 
 def encrypt(data):
-    pubkey_path = "./pubkey.pem"
     out = run(
         f"echo -n '{data}' | openssl rsautl -encrypt -pubin -inkey {pubkey_path} | base64 -w 0"
     )
@@ -132,7 +137,29 @@ def encrypt(data):
 
 
 def decode_pw(str):
-    return b64decode(str.encode() + b"==").decode().strip()
+    return b64decode(str + b"==").decode().strip()
+
+
+def encode_pw(str):
+    return b64encode(str.encode()).decode().strip()
+
+
+def get_credentials():
+    if not path.exists(secret_path):
+        inputUsername = input("Username (NRP): ")
+        inputPassword = getpass("Password: ")
+
+        if input() == "y":
+            f = open("secret.txt", "w")
+            f.write(inputUsername + "\n")
+            f.write(encode_pw(inputPassword))
+            f.close()
+
+    f = open(secret_path, "rb")
+    username = (f.readline().strip()).decode()
+    password = decode_pw(f.readline().strip())
+    f.close()
+    return username, password
 
 
 if __name__ == "__main__":
