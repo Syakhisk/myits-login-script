@@ -1,12 +1,5 @@
 #!/bin/env bash
 
-TOKEN="1zajgP8VFg9Aus6TKyGKx51vzztPQXuS8x24dN2lG0D"
-IP="$(hostname --ip-address)"
+# Notify uptime using uptime-kuma
 
-# notification
-curl -v \
-	-X POST \
-	-H "Authorization: Bearer $TOKEN" \
-	-F "message=PROXMOX UPDATE -- IP: $IP -- Date: $(date) -- Uptime: $(uptime -p)" \
-	-F "notificationDisabled=true" \
-	https://notify-api.line.me/api/notify
+curl -v "https://uptime-pve.up.railway.app/api/push/GDfazHsDQJ?status=up&msg=OK&ping="
